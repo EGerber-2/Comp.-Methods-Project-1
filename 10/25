@@ -1,0 +1,94 @@
+clc
+clear
+close all
+
+
+data = readmatrix('Static Test Stand Calibration Case 1.xlsx');
+adjusted_load = data(:,1);
+ch_0 = data(:,4); %technically all y coordinates for channel 0
+ch_1 = data(:,5); % technically all y coordinates for channel 1
+
+figure (1)
+scatter(adjusted_load,ch_0);
+title('Force vs. Voltage Channel 0')
+xlabel('Adjusted Force (lb)')
+ylabel("Voltage (mV)")
+
+N_0 = data(:,4); % N for channel 0
+x = data(:,1);% x for both channels
+delta = length(x)*sum(x.^2)-(sum(x)).^2; % delta is applicable to both channels, sinc it only relies on the x axis, which they share
+Asum_0 = ((sum(x.^2))*sum(ch_0) - sum(x)*sum(x.*ch_0))/delta;
+Bsum_0 = (length(x)*sum(x.*ch_0)-sum(x)*sum(ch_0))/delta;
+yfit_0 = Bsum_0 *x + Asum_0; % line of best fit for channel 0
+sigma_y_0 = sqrt(1/(length(x)-2) * sum((yfit_0-ch_0).^2)); 
+hold on;
+plot(x,yfit_0);
+hold on;
+plot(x,yfit_0 + 2*sigma_y_0, "Color" , 'k');
+plot(x,yfit_0 - 2*sigma_y_0, "Color" , 'k');
+legend('data' , 'line of best fit', ' \pm 2\sigma')
+string = sprintf('A_0 = %2.4f, B_0 = %2.4f', Asum_0, Bsum_0);
+text(Asum_0,Bsum_0,string); % printing a0, a1 values to my plot
+grid on;
+
+
+figure(2)
+scatter(adjusted_load,ch_1);
+title('Force vs. Voltage Channel 1')
+xlabel('Adjusted Force (lb)')
+ylabel("Voltage (mV)")
+
+N_1 = data(:,5); % N for channel 0
+Asum_1 = ((sum(x.^2))*sum(ch_1) - sum(x)*sum(x.*ch_1))/delta;
+Bsum_1 = (length(x)*sum(x.*ch_1)-sum(x)*sum(ch_1))/delta;
+yfit_1 = Bsum_1 *x + Asum_1;
+sigma_y_1 = sqrt(1/(length(x)-2) * sum((yfit_1-ch_1).^2)); 
+hold on;
+plot(x,yfit_1);
+hold on;
+plot(x,yfit_1 + 2*sigma_y_1, "Color" , 'k');
+plot(x,yfit_1 - 2*sigma_y_1, "Color" , 'k');
+legend('data' , 'line of best fit', ' \pm 2\sigma')
+
+string = sprintf('A_1 = %2.4f, B_1 = %2.4f', Asum_1, Bsum_1);
+text(Asum_1,Bsum_1,string); % printing a0, a1 values to my plot 
+grid on
+
+%math for equation 1 from the project instructions
+
+
+numerator_0 = data(:,4) - data(:,2);
+numerator_1 = data(:,5) - data(:,3);
+denominator = data(:,5) - data(:,3) + (data(:,4) - data(:,2));
+frac_0 = numerator_0 ./ denominator;
+frac_1 = numerator_1 ./ denominator;
+%adjusted_equation_0 = applied_load_0 .*frac_0; % eq. 1 from the project handout for channel 0
+adjusted_equation_1 = yfit_1 .*frac_1; % eq. 1 from the project handout for channel 1
+
+
+
+%for i = min(adjusted_load)
+    %input one test run
+    %convert all mV to force
+    %repeat for all test cases
+    %plot total force vs. time
+%end
+
+%{
+
+Array = ['1' , '2' , '3' '4' '5' '6' '7' '8' '9' '10'];
+for i = min(adjusted_load) : max(adjusted_load)
+    load('testrun1.mat')
+%}
+
+
+%test_1 = load('testrun1.mat');
+m = matfile('testrun1.mat');
+time = m.time;
+a_milli = m.mV;
+
+a_milli_0 = a_milli(:,1);
+applied_load_0 = Bsum_0.*(a_milli_0) + Asum_0; % first part of equation 1
+figure(3)
+plot(time,applied_load_0);
+%}
