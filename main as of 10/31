@@ -1,0 +1,150 @@
+clc
+clear
+close all
+
+
+data = readmatrix('Static Test Stand Calibration Case 1.xlsx');
+weight_in_lbs = data(:,1); % first coumn, weight applied in lbs
+ch_0 = data(:,4); %channel 0 voltage readouts
+ch_1 = data(:,5); %channel 1 voltage readouts
+adj_mV_0 = data(:,4) - data(:,2); 
+adj_mV_1 = data(:,5) - data(:,3);
+
+%math for equation 1
+
+
+load_0 = data(:,1) .* (adj_mV_0)./(adj_mV_0 + adj_mV_1);% equation 1 for channel 0
+load_1 = data(:,1) .* (adj_mV_1)./(adj_mV_0 + adj_mV_1);%equation 1 for channel 1
+
+
+figure(1)
+
+scatter(load_0,adj_mV_0);
+
+[P , S] = polyfit(load_0, adj_mV_0, 1); % finding slope (m) and intercept (b)
+m_0 = P(1);  %_0 corresponds to channel 0
+b_0 = P(2);
+%string = sprintf('b = %2.4f, m = %2.4f', b_0, m_0);
+text(b_0,m_0,string); % printing a0, a1 values to my plot
+x = min(load_0) : max(load_0)+2; % creating a range of x values for my graph to interact with
+equation = m_0*x + b_0; 
+hold on;
+plot(x,equation); % plotting line of best fit with the coefficients from polyfit
+hold on;
+title(' Channel 0: Voltage (mV) vs. Weight (lbs)')
+xlabel('Weight (lb)')
+ylabel("Adjusted Voltage (mV)")
+%legend('data' , 'line of best fit')
+string = sprintf('A_0 = %2.4f, B_0 = %2.4f', m_0, b_0);
+text(m_0,b_0,string); % printing a0, a1 values to my plot
+grid on;
+hold on
+[extrap_fit_0,delta_0] = polyval(P,load_0,S);
+lower_bound_y = equation - (2.*delta_0(:));
+upper_bound_y = equation + (2.*delta_0(:));
+plot (x,lower_bound_y);%plotting line of best fit - error
+plot (x,upper_bound_y);%plotting line of best fit - error
+hold on;
+
+
+figure(2)
+
+scatter(load_1,adj_mV_1);
+
+[Q , R] = polyfit(load_1, adj_mV_1, 1); % finding a0, a1 values
+m_1 = Q(1); 
+b_1 = Q(2);
+string = sprintf('b = %2.4f, a = %2.4f', b_1 , m_1);
+text(b_1,m_1,string); % printing a0, a1 values to my plot
+x = min(load_1) : max(load_1) + 2; % creating a range of x values for my graph to interact with
+equation_1 = m_1*x + b_1; 
+hold on;
+plot(x,equation_1); % plotting line of best fit with the coefficients from polyfit
+hold on;
+title(' Channel 1: Voltage (mV) vs. Weight (lbs)')
+xlabel('Weight (lb)')
+ylabel("Adjusted Voltage (mV)")
+
+%{
+x_1 = min(load_1) : max(load_1)+2;
+[extrap_fit_1,delta_1] = polyval(P,load_1,S);
+lower_bound_y_1 = equation - (2.*delta_1(:));
+upper_bound_y_1 = equation + (2.*delta_1(:));
+hold on
+plot (x_1,lower_bound_y_1);%plotting line of best fit - error
+plot (x_1,upper_bound_y_1);%plotting line of best fit - error
+%}
+
+%{
+array = ['1' '2' '3' '4' '5' '6' '7' '8' '9' '10'];
+for i=1:10   
+    filename(i) = 'testrun' + array(i) + '.mat';
+    T = load(filename(i)); 
+end
+%}
+
+
+
+%{
+A = [];
+for k = 1 : 10
+	matFileName = sprintf('testrun%d.mat', k);
+	if isfile(matFileName)
+		matData = load(matFileName);
+	else
+		fprintf('File %s does not exist.\n', matFileName);
+    end
+    A = [A,matData];
+
+end
+%}
+%A = [];
+%B = [];
+%C = [];
+m=[];
+for i = 1:10
+    load(sprintf('testrun%d.mat', i));
+   %{
+ time = m.time';
+    mV = m.mV;
+    resultant_mV_0 = mV(:,1);
+    resultant_mV_1 = mV(:,2);
+    A = [time];
+    B = [resultant_mV_0];
+    C = [resultant_mV_1];
+   %}
+end
+    %{
+m = load('testrun1.mat');
+time = m.time';
+test_run_mV_1 = m.mV;
+resultant_mV_0 = test_run_mV_1(:,1);
+new_data = m_0.*(resultant_mV_0) + b_0; % first part of equation 1
+figure(3)
+plot(time,new_data);
+%}
+%}
+%{
+for k = 1 : 10
+	% OPTION 1: Create a mat filename, and load it into a structure called matData.
+	matFileName = sprintf('testrun%d.mat', k);
+	if isfile(matFileName)
+		matData = load(matFileName);
+    else 
+		fprintf('File %s does not exist.\n', matFileName);
+    end
+end
+%}
+
+%A = ['1' '2' '3' '4' '5' '6' '7' '8' '9' '10'];
+
+
+
+%A_1 = strc2array(A(1));
+
+%}
+
+
+
+
+%}
