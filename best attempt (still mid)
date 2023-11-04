@@ -1,0 +1,29 @@
+sum = 0; 
+for i = 1 : 10
+    % Load your data
+    load(sprintf('testrun%d.mat', i));
+
+    thrust_0 = m_0 .* mV(:,1) + b_0;
+    thrust_1 = m_1 .* mV(:,2) + b_1;
+    total_thrust = thrust_0 + thrust_1;
+ figure(i + 2);
+
+    % Calculate the error based on the standard deviation of total_thrust
+    
+       err = std(total_thrust); 
+
+plot(time,total_thrust);
+hold on
+
+% Plots the errorbars at every 500th data point
+errorbar(time(1:500:end),total_thrust(1:500:end),err(1:500:end),'r')
+
+
+    title('Thrust vs Time');
+    xlabel('Time');
+    ylabel('Thrust');
+
+    sum = sum + max(total_thrust); 
+end
+
+ave_peak_thrust = sum/10;
