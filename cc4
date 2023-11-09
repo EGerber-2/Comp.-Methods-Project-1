@@ -1,0 +1,177 @@
+%Author(s): Eli Gerber
+%Purpose: To calculate two diff eqs using Euler Integration and 4th order
+%runge-kutta integration
+%Date: 11/8/23
+%Revisions: 
+
+
+clear
+clc
+close all
+
+g = @(x,y) exp(-x^2); %first function
+TEST = g(2,2); % checking my function
+
+
+load('AccurateData.mat')
+y_1 = 1 + g(0,1)*0.1;
+y_2 = 1 + g(0.1,y_1)*0.1;
+
+
+
+% x = 0:0.1:2;
+% 
+% for i = 1:length(x)-1
+%     y(1) = 1;
+%     x(1) = 0;
+%     y(i+1) = y(i) + g(x(i),y(i))*0.1;
+% end
+% plot(x_accurate,y_accurate);
+% hold on
+% plot(x,y)
+
+
+new_y = euler(g,0.1,0,1,2);
+
+max(new_y);
+
+% figure(1)
+% plot(x_accurate,y_accurate)
+% hold on
+ x = 0:0.1:2;
+%plot(x,new_y)
+%legend('accurate', 'mine')
+newy_accurate = interp1(x_accurate,y_accurate,x, 'linear','extrap');
+
+RMSE_val = RMSE(21,new_y,newy_accurate);
+
+
+y_prime = @(x,y) y*sin(x).^2;
+
+y_exact = @(x,y)  pi * exp((2*x - sin(2*x))/4);
+
+%
+x_exact_1 = 0:pi:3*pi;
+x_exact_2 = 0:pi/2:3*pi;
+x_exact_3 = 0:pi/4:3*pi;
+x_exact_4 = 0:pi/8:3*pi;
+
+
+
+y_prime(1,1); % checking my function, comparing it to my ti-84 answer
+
+y_exact(1,1); % checking my function, comparing it to my ti-84 answer
+
+%R_K_4_val = R_K_4(y_prime,pi,0,pi,3*pi); 
+
+x_euler = 0:pi:3*pi;
+x_rk4 = 0:pi:3*pi;
+
+R_K_4_val_1 = R_K_4(y_prime,pi,0,pi,3*pi); 
+%calling both functions with a step size of pi
+new_y_1 = euler(y_prime,pi,0,pi,3*pi);
+RMSE_1 = RMSE(4, new_y_1, x_exact_1);
+
+
+R_K_4_val_2 = R_K_4(y_prime,pi/2,0,pi,3*pi);
+%calling both functions with a step size of pi/2
+new_y_2 = euler(y_prime,pi/2,0,pi,3*pi);
+
+RMSE_2 = RMSE(4, new_y_2, x_exact_2);
+
+R_K_4_val_3 = R_K_4(y_prime,pi/4,0,pi,3*pi);
+%calling both functions with a step size of pi/4
+new_y_3 = euler(y_prime,pi/4,0,pi,3*pi);
+RMSE_3 = RMSE(13, new_y_3, x_exact_3);
+
+R_K_4_val_4 = R_K_4(y_prime,pi/8,0,pi,3*pi);
+%calling both functions with a step size of pi/8
+new_y_4 = euler(y_prime,pi/8,0,pi,3*pi);
+RMSE_4 = RMSE(25, new_y_4, x_exact_4);
+
+figure(1)
+plot(x_exact_1,y_exact(x_exact_1))
+title('step size = pi')
+hold on
+plot(x_exact_1,R_K_4_val_1);
+hold on;
+plot(x_exact_1,new_y_1)
+legend('exact' , 'rk4' , 'euler')
+
+figure(2)
+plot(x_exact_2,y_exact(x_exact_2))
+title('step size = pi/2')
+hold on
+plot(x_exact_2,R_K_4_val_2)
+hold on;
+plot(x_exact_2,new_y_2)
+legend('exact' , 'rk4', 'euler')
+
+figure(3)
+plot(x_exact_3,y_exact(x_exact_3))
+title('step size = pi/4')
+hold on
+plot(x_exact_3,R_K_4_val_3)
+hold on;
+plot(x_exact_3,new_y_3)
+legend('exact' , 'rk4', 'euler')
+
+figure(4)
+plot(x_exact_4,y_exact(x_exact_4))
+title('step size = pi/8')
+hold on
+plot(x_exact_1,R_K_4_val_1)
+hold on;
+plot(x_exact_4,new_y_4)
+legend('exact' , 'rk4', 'euler')
+
+% plot(x_exact_2,y_exact(x_exact_2))
+% hold on
+% plot(x_exact_3,y_exact(x_exact_3))
+% hold on
+% plot(x_exact_4,y_exact(x_exact_4))
+
+
+
+
+function[RMSE_val] = RMSE(n,x_i,x_hat_i)
+    for i =1:n
+        RMSE_val = sqrt((sum((x_i - x_hat_i).^2)/n));
+    end
+end
+
+
+
+function [new_y] = euler(eq,h,x_0,y,x_f)
+    x = x_0:h:x_f;
+
+    for i = 1:length(x)-1
+        y(i+1) = y(i) + eq(x(i),y(i))*h;
+    end
+    new_y = y;
+    %figure(1)
+    %plot(x,new_y)
+    %title('euler')
+   %hold on
+end
+
+function [R_K_4_val] = R_K_4(eq,h,x_0,y,x_f)
+        x = x_0:h:x_f;
+         for i = 1:length(x)-1
+        y_dot_1 = eq(x(i),y(i));
+        y_dot_2 = eq(x(i)+h/2, y(i)+y_dot_1*h/2);
+        y_dot_3 = eq(x(i)+h/2, y(i)+y_dot_2*h/2);
+        y_dot_4 = eq(x(i) + h, y(i)+y_dot_3*h/2);
+       
+            y(i+1) = y(i) + (h/6)*(y_dot_1+2*y_dot_2+2*y_dot_3+y_dot_4);
+        R_K_4_val = y;
+    
+
+         end
+%          figure(5)
+%          plot(x,R_K_4_val)
+%          title('rk4 - all step sizes')
+%          hold on
+         
+end
+
